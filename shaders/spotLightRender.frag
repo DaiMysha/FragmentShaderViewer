@@ -1,16 +1,12 @@
 uniform vec2 center;
 uniform float radius;
 uniform vec4 color;
-uniform float directionAngle;
-uniform float spreadAngle;
-uniform float size;
 uniform float bleed;
 uniform float linearFactor;
-
+uniform bool outline;
 uniform bool iso;
 
-void main()
-{
+void main() {
 	vec2 pixel = gl_FragCoord.xy;
 	if(iso) pixel.y = center.y + 2*(pixel.y - center.y);
 	float dist = length(center - pixel);
@@ -18,11 +14,11 @@ void main()
 	float distFromFalloff = radius - dist;
 	
 	float attenuation = 0.0;
-	//attenuation = distFromFalloff * (bleed / pow(dist, 2) + linearFactor / radius);
-	attenuation = 1 - dist/radius;
+	attenuation = distFromFalloff * (bleed / pow(dist, 2) + linearFactor / radius);
 			
 	attenuation = clamp(attenuation, 0.0, 1.0);
-	if(floor(dist)==floor(radius)) attenuation = 1;
+
+	if(outline && floor(dist)==floor(radius)) attenuation = 1;
 	
 	vec4 color = vec4(attenuation, attenuation, attenuation, 1.0) * vec4(color.r, color.g, color.b, color.a);
 

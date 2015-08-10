@@ -14,9 +14,9 @@ const char varyingParamName[] = "";
 int delay = 100;
 float downlimit = 0.0f;
 float uplimit = 360.0f;
-float inc = 10.0f;
+float inc = 15.0f;
 
-float spreadAngle = 180;
+float spreadAngle = 70;
 
 sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Fragment Shader Viewer");
 
@@ -30,11 +30,7 @@ void loadShader(sf::Shader& shader, std::string filename) {
     sf::Vector2f mouse(window.mapPixelToCoords(mouseInt));
     shader.setParameter("center",mouse);
     shader.setParameter("radius",300.0f);
-    shader.setParameter("color",sf::Color(0,255,0,127));
-    shader.setParameter("directionAngle",0.0f);
-    shader.setParameter("spreadAngle",360.0f);
-    shader.setParameter("intensity",1.0f);
-    shader.setParameter("size",1.0f);
+    shader.setParameter("color",sf::Color(0,255,0,255));
     shader.setParameter("bleed",0.0f);
     shader.setParameter("linearFactor",1.0f);
 }
@@ -74,6 +70,7 @@ int main(int argc, char** argv) {
     sf::RenderTexture shaderTexture;
     shaderTexture.create(WIDTH,HEIGHT);
     shaderTexture.clear();
+    sf::Sprite tex_spr(shaderTexture.getTexture());
 
     //shader.setParameter("center",sf::Vector2f(WIDTH/2,HEIGHT/2));
     sf::Vector2i mouseInt = sf::Mouse::getPosition(window);
@@ -85,16 +82,21 @@ int main(int argc, char** argv) {
 
     bool iso = false;
     shader.setParameter("iso",iso);
+    bool outline = false;
+    shader.setParameter("outline",outline);
 
     window.setMouseCursorVisible(false);
 
     sf::ConvexShape triangle;
     triangle.setPointCount(4);
     triangle.setPoint(0,sf::Vector2f(WIDTH/2,HEIGHT/2));
-    triangle.setPoint(2,DMUtils::sfml::rotate(triangle.getPoint(0)+sf::Vector2f(0,600),DMUtils::maths::degToRad(0.0),triangle.getPoint(0)));
+    triangle.setPoint(2,DMUtils::sfml::rotate(triangle.getPoint(0)+sf::Vector2f(0,350.0),DMUtils::maths::degToRad(0.0),triangle.getPoint(0)));
     //triangle.setPoint(2,triangle.getPoint(0)+sf::Vector2f(0,200));
     triangle.setPoint(1,DMUtils::sfml::rotate(triangle.getPoint(2),DMUtils::maths::degToRad(-spreadAngle/2.0f),triangle.getPoint(0)));
     triangle.setPoint(3,DMUtils::sfml::rotate(triangle.getPoint(2),DMUtils::maths::degToRad(+spreadAngle/2.0f),triangle.getPoint(0)));
+
+    sf::RenderStates multiplySte;
+    multiplySte.blendMode = sf::BlendMultiply;
 
     while (window.isOpen()) {
         sf::Event event;
@@ -112,6 +114,11 @@ int main(int argc, char** argv) {
                         shader.setParameter("iso",iso);
                         std::cout << "iso : " << iso << std::endl;
                         break;
+                    case sf::Keyboard::F2:
+                        outline = !outline;
+                        shader.setParameter("outline",outline);
+                        std::cout << "outline : " << outline << std::endl;
+                        break;
                     case sf::Keyboard::F5 :
                     {
                         loadShader(shader,filename);
@@ -124,18 +131,20 @@ int main(int argc, char** argv) {
         }
 
         shader.setParameter("center",sf::Vector2f(WIDTH/2,HEIGHT/2));
-        shaderTexture.draw(rect,&shader);
+        //shaderTexture.draw(rect,&shader);
+        shaderTexture.clear();
+        shaderTexture.draw(triangle,&shader);
         window.clear(sf::Color::Blue);
         window.draw(spr);
-        //window.draw(sf::Sprite(shaderTexture.getTexture()));
-        window.draw(triangle,&shader);
+        window.draw(tex_spr,sf::BlendMultiply);
+        //window.draw(triangle,&shader);
         window.display();
 
         if(clock.getElapsedTime().asMilliseconds() > delay) {
             varying += inc;
-    triangle.setPoint(2,DMUtils::sfml::rotate(triangle.getPoint(0)+sf::Vector2f(0,200),DMUtils::maths::degToRad(varying),triangle.getPoint(0)));
-    triangle.setPoint(1,DMUtils::sfml::rotate(triangle.getPoint(2),DMUtils::maths::degToRad(-spreadAngle/2.0f),triangle.getPoint(0)));
-    triangle.setPoint(3,DMUtils::sfml::rotate(triangle.getPoint(2),DMUtils::maths::degToRad(+spreadAngle/2.0f),triangle.getPoint(0)));
+                triangle.setPoint(2,DMUtils::sfml::rotate(triangle.getPoint(0)+sf::Vector2f(0,350.0),DMUtils::maths::degToRad(varying),triangle.getPoint(0)));
+                triangle.setPoint(1,DMUtils::sfml::rotate(triangle.getPoint(2),DMUtils::maths::degToRad(-spreadAngle/2.0f),triangle.getPoint(0)));
+                triangle.setPoint(3,DMUtils::sfml::rotate(triangle.getPoint(2),DMUtils::maths::degToRad(+spreadAngle/2.0f),triangle.getPoint(0)));
             shader.setParameter(varyingParamName,varying);
             if(varying > uplimit) varying = downlimit;
             std::cout << "[" << downlimit << "] " << varying << " [" << uplimit << "]"
