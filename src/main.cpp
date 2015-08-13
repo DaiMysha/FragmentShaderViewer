@@ -12,9 +12,9 @@
 
 const char varyingParamName[] = "";
 int delay = 100;
-float downlimit = 0.0f;
-float uplimit = 360.0f;
-float inc = 15.0f;
+float downlimit = 0.5f;
+float uplimit = 3.0f;
+float inc = 0.05f;
 
 float spreadAngle = 70;
 
@@ -33,6 +33,7 @@ void loadShader(sf::Shader& shader, std::string filename) {
     shader.setParameter("color",sf::Color(0,255,0,255));
     shader.setParameter("bleed",0.0f);
     shader.setParameter("linearFactor",1.0f);
+    shader.setParameter("thresholdCount",3.0f);
 }
 
 int main(int argc, char** argv) {
@@ -129,11 +130,12 @@ int main(int argc, char** argv) {
             mouseInt = sf::Mouse::getPosition(window);
             mouse = window.mapPixelToCoords(mouseInt);
         }
-
-        shader.setParameter("center",sf::Vector2f(WIDTH/2,HEIGHT/2));
-        //shaderTexture.draw(rect,&shader);
         shaderTexture.clear();
-        shaderTexture.draw(triangle,&shader);
+
+        //shader.setParameter("center",sf::Vector2f(WIDTH/2,HEIGHT/2));
+        shader.setParameter("center",sf::Vector2f(WIDTH/2,HEIGHT/2));
+        shaderTexture.draw(rect,&shader);
+        //shaderTexture.draw(triangle,&shader);
         window.clear(sf::Color::Blue);
         window.draw(spr);
         window.draw(tex_spr,sf::BlendMultiply);
