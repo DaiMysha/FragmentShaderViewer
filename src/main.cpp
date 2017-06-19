@@ -7,8 +7,8 @@
 #include <DMUtils/maths.hpp>
 #include <DMUtils/sfml.hpp>
 
-#define WIDTH   640
-#define HEIGHT  480
+#define WIDTH   1024
+#define HEIGHT  1024
 
 const char varyingParamName[] = "";
 int delay = 100;
@@ -25,14 +25,18 @@ void loadShader(sf::Shader& shader, std::string filename) {
     if(!shader.loadFromFile(filename.c_str(),sf::Shader::Fragment)) {
         std::cerr << "Failed to load " << filename << std::endl;
     }
+    else
+    {
+        std::cerr << "Loaded shader successfully" << std::endl;
+    }
 
     sf::Vector2i mouseInt = sf::Mouse::getPosition(window);
     sf::Vector2f mouse(window.mapPixelToCoords(mouseInt));
     shader.setParameter("center",mouse);
     shader.setParameter("radius",300.0f);
-    shader.setParameter("color",sf::Color(0,255,0,255));
-    shader.setParameter("bleed",0.0f);
-    shader.setParameter("linearFactor",1.0f);
+    shader.setParameter("color",sf::Color::Yellow);
+    shader.setParameter("bleed",1.0f);
+    shader.setParameter("linearFactor",.1f);
 }
 
 int main(int argc, char** argv) {
@@ -62,6 +66,7 @@ int main(int argc, char** argv) {
     }
 
     sf::Sprite spr(tex);
+    spr.scale(1, -1);
 
     sf::VertexArray rect(sf::Quads,4);
     rect[0].position = sf::Vector2f(0,0);
@@ -86,6 +91,8 @@ int main(int argc, char** argv) {
 
     bool outline = false;
     shader.setParameter("outline",outline);
+    shader.setParameter("normalMap", normalTex);
+    shader.setParameter("diffuseMap", tex);
 
     sf::ConvexShape triangle;
     triangle.setPointCount(4);
@@ -117,6 +124,9 @@ int main(int argc, char** argv) {
                     case sf::Keyboard::F5 :
                     {
                         loadShader(shader,filename);
+                        shader.setParameter("outline",outline);
+                        shader.setParameter("normalMap", normalTex);
+                        shader.setParameter("diffuseMap", tex);
                     } break;
                     default: break;
                 }
@@ -126,13 +136,13 @@ int main(int argc, char** argv) {
         }
         shaderTexture.clear();
 
+        shader.setParameter("center",mouse);
         //shader.setParameter("center",sf::Vector2f(WIDTH/2,HEIGHT/2));
-        shader.setParameter("center",sf::Vector2f(WIDTH/2,HEIGHT/2));
         shaderTexture.draw(rect,&shader);
         //shaderTexture.draw(triangle,&shader);
         window.clear(sf::Color::Blue);
         window.draw(spr);
-        window.draw(tex_spr,sf::BlendMultiply);
+        window.draw(tex_spr);
         //window.draw(triangle,&shader);
         window.display();
 
