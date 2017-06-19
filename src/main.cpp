@@ -34,9 +34,10 @@ void loadShader(sf::Shader& shader, std::string filename) {
     sf::Vector2f mouse(window.mapPixelToCoords(mouseInt));
     shader.setParameter("center",mouse);
     shader.setParameter("radius",300.0f);
-    shader.setParameter("color",sf::Color::Yellow);
-    shader.setParameter("bleed",1.0f);
-    shader.setParameter("linearFactor",.1f);
+    shader.setParameter("color",sf::Color(90,20,190));
+    shader.setParameter("color",sf::Color::White);
+    shader.setParameter("bleed",.5f);
+    shader.setParameter("linearFactor",.5f);
 }
 
 int main(int argc, char** argv) {
