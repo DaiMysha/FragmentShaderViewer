@@ -33,7 +33,6 @@ void loadShader(sf::Shader& shader, std::string filename) {
     shader.setParameter("color",sf::Color(0,255,0,255));
     shader.setParameter("bleed",0.0f);
     shader.setParameter("linearFactor",1.0f);
-    shader.setParameter("thresholdCount",3.0f);
 }
 
 int main(int argc, char** argv) {
@@ -51,8 +50,14 @@ int main(int argc, char** argv) {
    loadShader(shader,filename);
 
     sf::Texture tex;
-    if(!tex.loadFromFile("data/map.jpg")) {
-        std::cerr << "Failed to load map.jpg" << std::endl;
+    if(!tex.loadFromFile("data/brickwall.jpg")) {
+        std::cerr << "Failed to load brickwall.jpg" << std::endl;
+        return -2;
+    }
+
+    sf::Texture normalTex;
+    if(!normalTex.loadFromFile("data/brickwall_normal.jpg")) {
+        std::cerr << "Failed to load brickwall_normal.jpg" << std::endl;
         return -2;
     }
 
@@ -77,16 +82,10 @@ int main(int argc, char** argv) {
     sf::Vector2i mouseInt = sf::Mouse::getPosition(window);
     sf::Vector2f mouse(window.mapPixelToCoords(mouseInt));
 
-    float varying = downlimit;
-
     sf::Clock clock;
 
-    bool iso = false;
-    shader.setParameter("iso",iso);
     bool outline = false;
     shader.setParameter("outline",outline);
-
-    window.setMouseCursorVisible(false);
 
     sf::ConvexShape triangle;
     triangle.setPointCount(4);
@@ -110,11 +109,6 @@ int main(int argc, char** argv) {
                     {
                         window.close();
                     } break;
-                    case sf::Keyboard::F1:
-                        iso = !iso;
-                        shader.setParameter("iso",iso);
-                        std::cout << "iso : " << iso << std::endl;
-                        break;
                     case sf::Keyboard::F2:
                         outline = !outline;
                         shader.setParameter("outline",outline);
@@ -142,19 +136,6 @@ int main(int argc, char** argv) {
         //window.draw(triangle,&shader);
         window.display();
 
-        if(clock.getElapsedTime().asMilliseconds() > delay) {
-            varying += inc;
-                triangle.setPoint(2,DMUtils::sfml::rotate(triangle.getPoint(0)+sf::Vector2f(0,350.0),DMUtils::maths::degToRad(varying),triangle.getPoint(0)));
-                triangle.setPoint(1,DMUtils::sfml::rotate(triangle.getPoint(2),DMUtils::maths::degToRad(-spreadAngle/2.0f),triangle.getPoint(0)));
-                triangle.setPoint(3,DMUtils::sfml::rotate(triangle.getPoint(2),DMUtils::maths::degToRad(+spreadAngle/2.0f),triangle.getPoint(0)));
-            shader.setParameter(varyingParamName,varying);
-            if(varying > uplimit) varying = downlimit;
-            std::cout << "[" << downlimit << "] " << varying << " [" << uplimit << "]"
-            /*<< " | bleed / dist² : " <<  (varying/DMUtils::maths::power<2>::of(DMUtils::sfml::norm2(sf::Vector2f(15,15)-mouse)))
-            << " | linearFactor / radius :" << (0.5f/300.0f)*/
-            << std::endl;
-            clock.restart();
-        }
     }
 
     return 0;

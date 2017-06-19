@@ -4,14 +4,11 @@ uniform vec4 color;
 uniform float bleed;
 uniform float linearFactor;
 uniform bool outline;
-uniform bool iso;
-
-uniform float thresholdCount;
 
 void main() {
 
 	vec2 pixel = gl_FragCoord.xy;
-	if(iso) pixel.y = center.y + 2*(pixel.y - center.y);
+	
 	float dist = length(center - pixel);
 	
 	float distFromFalloff = radius - dist;
@@ -23,15 +20,7 @@ void main() {
 
 	if(outline && floor(dist)==floor(radius)) attenuation = 1;
 	
-	float newAtt = 0.0f;
-	
-	for(float i=0;i<thresholdCount;++i) {
-		if(attenuation > (i) / thresholdCount) {
-			newAtt = (i) / thresholdCount;
-		}
-	}
-
-	vec4 color = vec4(newAtt, newAtt, newAtt, 1.0) * vec4(color.r, color.g, color.b, color.a);
+	vec4 color = vec4(attenuation, attenuation, attenuation, 1.0) * vec4(color.r, color.g, color.b, color.a);
 	
 	gl_FragColor = color;
 }
