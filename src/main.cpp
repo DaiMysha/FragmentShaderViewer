@@ -18,6 +18,9 @@ float inc = 0.05f;
 
 float spreadAngle = 70;
 
+//sf::Color color(90,20,190);
+sf::Color color = sf::Color::White;
+
 sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Fragment Shader Viewer");
 
 void loadShader(sf::Shader& shader, std::string filename) {
@@ -34,8 +37,8 @@ void loadShader(sf::Shader& shader, std::string filename) {
     sf::Vector2f mouse(window.mapPixelToCoords(mouseInt));
     shader.setParameter("center",mouse);
     shader.setParameter("radius",300.0f);
-    shader.setParameter("color",sf::Color(90,20,190));
-    shader.setParameter("color",sf::Color::White);
+    shader.setParameter("color",color);
+    //shader.setParameter("color",sf::Color::White);
     shader.setParameter("bleed",.5f);
     shader.setParameter("linearFactor",.5f);
 }
@@ -55,19 +58,31 @@ int main(int argc, char** argv) {
    loadShader(shader,filename);
 
     sf::Texture tex;
-    if(!tex.loadFromFile("data/brickwall.jpg")) {
+    if(!tex.loadFromFile("data/test.jpg")) {
         std::cerr << "Failed to load brickwall.jpg" << std::endl;
         return -2;
     }
 
     sf::Texture normalTex;
-    if(!normalTex.loadFromFile("data/brickwall_normal.jpg")) {
+    if(!normalTex.loadFromFile("data/test_NormalMap2.png")) {
         std::cerr << "Failed to load brickwall_normal.jpg" << std::endl;
         return -2;
     }
 
+    sf::Texture lightTex;
+    if(!lightTex.loadFromFile("data/light.png")) {
+        std::cerr << "Failed to load light.png" << std::endl;
+        return -2;
+    }
+
+    sf::Sprite light(lightTex);
+    light.setOrigin(lightTex.getSize().x/2.0f, lightTex.getSize().y/2.0f);
+
     sf::Sprite spr(tex);
     spr.scale(1, -1);
+    spr.setOrigin(0, HEIGHT);
+
+    bool normalMap = true;
 
     sf::VertexArray rect(sf::Quads,4);
     rect[0].position = sf::Vector2f(0,0);
@@ -94,6 +109,7 @@ int main(int argc, char** argv) {
     shader.setParameter("outline",outline);
     shader.setParameter("normalMap", normalTex);
     shader.setParameter("diffuseMap", tex);
+    shader.setParameter("lightMap", lightTex);
 
     sf::ConvexShape triangle;
     triangle.setPointCount(4);
@@ -120,7 +136,9 @@ int main(int argc, char** argv) {
                     case sf::Keyboard::F2:
                         outline = !outline;
                         shader.setParameter("outline",outline);
-                        std::cout << "outline : " << outline << std::endl;
+                        break;
+                    case sf::Keyboard::F3:
+                        normalMap = !normalMap;
                         break;
                     case sf::Keyboard::F5 :
                     {
@@ -128,6 +146,7 @@ int main(int argc, char** argv) {
                         shader.setParameter("outline",outline);
                         shader.setParameter("normalMap", normalTex);
                         shader.setParameter("diffuseMap", tex);
+                        shader.setParameter("lightMap", lightTex);
                     } break;
                     default: break;
                 }
@@ -137,13 +156,17 @@ int main(int argc, char** argv) {
         }
         shaderTexture.clear();
 
-        shader.setParameter("center",mouse);
-        //shader.setParameter("center",sf::Vector2f(WIDTH/2,HEIGHT/2));
+        light.setPosition(sf::Vector2f(WIDTH/2,HEIGHT/2));
+        light.setPosition(mouse);
+        shader.setParameter("center",sf::Vector2f(WIDTH/2,HEIGHT/2));
+        shader.setParameter("center",light.getPosition());
         shaderTexture.draw(rect,&shader);
         //shaderTexture.draw(triangle,&shader);
         window.clear(sf::Color::Blue);
         window.draw(spr);
-        window.draw(tex_spr);
+        spr.setColor(color);
+        window.draw(light, sf::BlendMultiply);
+        if(normalMap) window.draw(tex_spr, sf::BlendAdd);
         //window.draw(triangle,&shader);
         window.display();
 
